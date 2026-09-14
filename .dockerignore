@@ -1,0 +1,10 @@
+# Deny everything except the exact runtime files.
+**
+!index.html
+!styles.css
+!app.js
+!calculator.js
+!rules.js
+!theme.js
+!assets/
+!assets/demo-mark.svg

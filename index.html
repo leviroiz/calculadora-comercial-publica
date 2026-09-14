@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Calculadora de descontos | Demo Comercial</title>
+    <meta
+      name="description"
+      content="Simulador de descontos com produtos e condições fictícias para portfólio." />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d4ed8'/%3E%3Ctext x='7' y='24' fill='white' font-size='24'%3ED%3C/text%3E%3C/svg%3E" />
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="rules.js"></script>
+    <script defer src="calculator.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <img
+          class="brand-logo"
+          src="assets/demo-mark.svg"
+          alt=""
+          width="52"
+          height="52" />
+        <div>
+          <strong class="brand-name">Demo Comercial</strong
+          ><span class="brand-caption">PORTFÓLIO · DADOS FICTÍCIOS</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button
+          id="theme-toggle"
+          class="theme-toggle"
+          type="button"
+          aria-label="Tema escuro"
+          aria-pressed="false">
+          <svg
+            class="moon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true">
+            <path d="M20 15.5A9 9 0 0 1 8.5 4 9 9 0 1 0 20 15.5Z" />
+          </svg>
+          <svg
+            class="sun"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path
+              d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" />
+          </svg>
+          <span>Tema escuro</span>
+        </button>
+      </div>
+    </header>
+    <main>
+      <div class="intro">
+        <div>
+          <p class="eyebrow">CONDIÇÕES COMERCIAIS</p>
+          <h1>Calculadora de descontos</h1>
+          <p>Monte o pedido e aplique o melhor desconto em cada item.</p>
+        </div>
+        <span class="version">Demonstração</span>
+      </div>
+      <div class="notice">
+        <strong>Fidelidade definido pelo valor bruto.</strong> Em cada item,
+        aplicamos Fidelidade ou o preço progressivo fictício, conforme o maior
+        benefício.
+      </div>
+      <div class="workspace">
+        <section class="panel order">
+          <div class="section-title">
+            <h2>Itens do pedido</h2>
+            <span id="count">0 itens</span>
+          </div>
+          <p class="hint">
+            Digite a referência exata para preencher o preço fictício. Outras
+            itens usam o preço base informado e Fidelidade. Quantidades da mesma
+            referência são somadas.
+          </p>
+          <datalist id="references">
+            <option value="DEMO-A">Caderno criativo</option>
+            <option value="DEMO-B">Estojo modular</option>
+            <option value="DEMO-C">Organizador de mesa</option>
+            <option value="DEMO-D">Bloco de notas</option>
+          </datalist>
+          <div id="items"></div>
+          <button id="add" class="secondary" type="button">
+            + Adicionar item
+          </button>
+          <div id="error" role="alert"></div>
+          <div class="gross">
+            <span>Valor bruto do pedido</span
+            ><strong id="gross">R$ 0,00</strong>
+          </div>
+        </section>
+        <aside>
+          <section class="recommendation" aria-live="polite">
+            <p class="eyebrow">MELHOR CONDIÇÃO</p>
+            <h2 id="winner">Monte seu pedido</h2>
+            <p id="winner-note">Adicione um produto para começar.</p>
+            <p>Faixa Fidelidade: <strong id="current-rate">—</strong></p>
+            <div class="saving">
+              <span>Total final do pedido</span
+              ><strong id="final-total">—</strong>
+            </div>
+            <div class="saving">
+              <span>Economia no pedido</span><strong id="saving">—</strong>
+            </div>
+            <p id="difference"></p>
+          </section>
+          <section class="panel next">
+            <h2>Próxima faixa Fidelidade</h2>
+            <p id="next">A partir de R$ 1.500,00, desconto de 5%.</p>
+            <div class="tiers">
+              <span>R$ 1.500<strong>5%</strong></span
+              ><span>R$ 3.000<strong>10%</strong></span
+              ><span>R$ 5.000<strong>18%</strong></span>
+            </div>
+          </section>
+        </aside>
+      </div>
+      <section class="comparison">
+        <div class="section-title">
+          <h2>Cenários isolados para conferência</h2>
+          <span>Sem combinação por item</span>
+        </div>
+        <div class="scenario-grid">
+          <article class="panel">
+            <div class="section-title">
+              <h3>Progressivo</h3>
+              <span id="progressive-status" class="badge">4 referências</span>
+            </div>
+            <strong class="total" id="progressive-total">—</strong>
+            <p id="progressive-saving">Aguardando pedido válido.</p>
+          </article>
+          <article class="panel">
+            <div class="section-title">
+              <h3>Fidelidade</h3>
+              <span class="badge" id="rate">0%</span>
+            </div>
+            <strong class="total" id="loyalty-total">—</strong>
+            <p id="loyalty-saving">Desconto sobre o valor bruto dos itens.</p>
+          </article>
+        </div>
+      </section>
+      <footer>
+        Base desta simulação: total bruto dos itens, sem frete. Totais
+        arredondados por item para centavos; unitários com até 4 casas. Empates
+        usam Fidelidade. O pedido não é salvo ao fechar ou atualizar a página.
+      </footer>
+    </main>
+  </body>
+</html>
