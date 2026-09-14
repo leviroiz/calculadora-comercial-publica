@@ -38,7 +38,7 @@ The calculator evaluates:
 ## 🖥️ Demo Preview
 
 <p align="center">
-  <img src="docs/images/calculator-preview.png" alt="Commercial pricing calculator demo" width="1000">
+  <img src="docs/images/preview.png" alt="Commercial pricing calculator demo" width="1000">
 </p>
 
 The interface compares loyalty, progressive pricing, and PIX scenarios and automatically highlights the option with the highest customer savings.
