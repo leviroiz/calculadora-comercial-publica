@@ -1,83 +1,315 @@
-# Calculadora Comercial — demonstração de portfólio
+<div align="center">
 
-Simulador estático que compara desconto por faixa e progressivo com um cenário PIX + progressivo, selecionando a maior economia. **Produtos, SKUs, preços e faixas são sintéticos e adaptados para portfólio.** Não representam ofertas reais nem possuem vínculo empresarial. PIX de 5% é uma condição demonstrativa, não uma regra geral do meio de pagamento.
+# Commercial Pricing Calculator
 
-## Como usar
+**Static pricing simulator that compares loyalty discounts, progressive pricing, and PIX scenarios to identify the highest customer savings.**
 
-Abra `index.html`. Informe o **valor bruto total do pedido**, sem frete, e somente as **quantidades dos produtos elegíveis a progressivo já incluídos nesse valor**. Deixe zero nos demais. Marque PIX para comparar os dois cenários. Não é necessário cadastrar os demais itens ou informar preços unitários.
+<p>
+  <img src="https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5">
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3">
+  <img src="https://img.shields.io/badge/Playwright-UI_Tests-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" alt="Playwright">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
+</p>
 
-A tela mostra a condição vencedora, economia e total final por cenário, progressivo por referência, PIX nas referências elegíveis ao PIX, PIX no restante e próxima faixa. O cálculo é automático. Há temas claro/escuro e layout responsivo.
+</div>
 
-## Regras da demonstração
+---
 
-| SKU | Produto fictício | Base | 4+ unidades | 8+ unidades |
+## 🚀 Overview
+
+This project is a static commercial pricing simulator built to compare multiple discount scenarios and automatically select the option that provides the highest customer savings.
+
+The calculator evaluates:
+
+- loyalty discount tiers
+- progressive pricing by product reference
+- a demonstrative PIX scenario
+- the best discount per eligible item
+- total savings and final order value by scenario
+
+> [!IMPORTANT]
+> All products, SKUs, prices, discount tiers, and commercial conditions used in this repository are **synthetic and adapted for portfolio purposes**.
+>
+> They do not represent real offers, company policies, or official payment rules.
+
+---
+
+## 🖥️ Demo Preview
+
+<p align="center">
+  <img src="docs/images/calculator-preview.png" alt="Commercial pricing calculator demo" width="1000">
+</p>
+
+The interface compares loyalty, progressive pricing, and PIX scenarios and automatically highlights the option with the highest customer savings.
+
+The demo supports light and dark themes and runs entirely in the browser.
+
+---
+
+## ✨ Key Features
+
+- automatic comparison between pricing scenarios
+- loyalty discount tiers based on gross order value
+- progressive pricing by product reference
+- demonstrative PIX comparison
+- no discount stacking on the same unit
+- deterministic tie-breaking rules
+- detailed savings breakdown
+- responsive interface
+- light and dark themes
+- keyboard-friendly interaction
+- client-side execution only
+
+---
+
+## 🧮 Pricing Logic
+
+The public demo uses synthetic products and pricing rules:
+
+| SKU | Demo Product | Base Price | 4+ Units | 8+ Units |
 |---|---|---:|---:|---:|
-| DEMO-A | Caderno criativo | R$ 72,00 | R$ 66,00 | R$ 60,00 |
-| DEMO-B | Estojo modular | R$ 48,00 | R$ 45,00 | R$ 42,00 |
-| DEMO-C | Organizador de mesa | R$ 48,00 | R$ 45,00 | R$ 42,00 |
-| DEMO-D | Bloco de notas | R$ 32,00 | R$ 30,00 | R$ 28,00 |
+| DEMO-A | Creative Notebook | R$ 72.00 | R$ 66.00 | R$ 60.00 |
+| DEMO-B | Modular Pencil Case | R$ 48.00 | R$ 45.00 | R$ 42.00 |
+| DEMO-C | Desk Organizer | R$ 48.00 | R$ 45.00 | R$ 42.00 |
+| DEMO-D | Notepad | R$ 32.00 | R$ 30.00 | R$ 28.00 |
 
-Faixas de fidelidade: abaixo de R$ 1.500,00, 0%; a partir de R$ 1.500,00, 5%; R$ 3.000,00, 10%; R$ 5.000,00, 18%. Catálogo em `rules.js`.
+### Loyalty tiers
 
-- **Normal:** faixa determinada pelo bruto completo. Cada referência recebe fidelidade ou progressivo, conforme o maior benefício. O restante recebe fidelidade.
-- **PIX:** cada referência recebe progressivo somente quando superar 5% de sua base. As demais referências e o restante recebem PIX de 5%. Fidelidade não participa deste cenário.
-- Nunca há acúmulo de descontos na mesma unidade. Empate entre cenários mantém normal. Empate por referência usa fidelidade no normal e PIX no cenário PIX.
-- Preços em centavos; comparação antes do arredondamento. Fidelidade é arredondada por referência e no restante. PIX é arredondado uma vez sobre todo o bruto que recebe PIX, com rateio cumulativo no detalhamento.
-- Valor positivo até R$ 1 bilhão, até duas casas decimais, sem separador de milhar. Quantidades inteiras de 0 a 100.000. Subtotal das referências não pode exceder o bruto. Referências desconhecidas são rejeitadas pelo motor.
-
-### Exemplo verificável
-
-Bruto **R$ 1.000,00**, quatro unidades de DEMO-A, PIX marcado:
-
-| Parcela | Economia |
+| Gross Order Value | Discount |
 |---|---:|
-| Progressivo nas quatro unidades | R$ 24,00 |
-| PIX de 5% no restante de R$ 712,00 | R$ 35,60 |
-| Economia do cenário PIX | **R$ 59,60** |
-| Total final PIX | **R$ 940,40** |
-| Economia normal | R$ 24,00 |
-| Total final normal | R$ 976,00 |
+| Below R$ 1,500 | 0% |
+| From R$ 1,500 | 5% |
+| From R$ 3,000 | 10% |
+| From R$ 5,000 | 18% |
 
-PIX vence. Desmarcá-lo aplica o cenário normal.
+### Normal Scenario
 
-## Arquitetura e privacidade
+For each eligible product reference, the pricing engine compares:
 
-HTML, CSS e JavaScript sem framework ou dependências de execução. `calculator.js` contém o motor independente do DOM; `app.js` lê o formulário; `theme.js` mantém apenas a preferência visual em `demo-commercial-theme`. Pedidos ficam em memória e são descartados ao recarregar. Sem backend, banco, analytics ou integrações comerciais. O registro opcional `read_discount_comparison` permite leitura no navegador que disponibilize `document.modelContext.registerTool`.
+- loyalty discount
+- progressive pricing
 
-A identidade azul e o símbolo `assets/demo-mark.svg` são genéricos. O catálogo é código confiável distribuído junto com a aplicação, não entrada externa.
+and applies whichever produces the greater benefit.
 
-## Testes
+The remaining order value receives the loyalty discount.
 
-Com Node.js e Microsoft Edge instalados:
+### PIX Scenario
 
-```sh
-npm install
-npm test
+For each eligible reference:
+
+- progressive pricing is applied when it provides more savings than the demonstrative **5% PIX discount**
+- otherwise, the PIX discount is applied
+
+The remaining eligible order value also receives the PIX discount.
+
+> Discounts are never stacked on the same unit.
+
+---
+
+## ✅ Example
+
+Gross order value:
+
+```text
+R$ 1,000.00
 ```
 
-Playwright é usado apenas nos testes de interface. As suítes de cálculo podem rodar sem instalar pacotes:
+Order:
 
-```sh
+```text
+4 × DEMO-A
+```
+
+PIX comparison enabled.
+
+| Component | Savings |
+|---|---:|
+| Progressive pricing on DEMO-A | R$ 24.00 |
+| PIX discount on remaining R$ 712.00 | R$ 35.60 |
+| **Total PIX savings** | **R$ 59.60** |
+| **Final PIX total** | **R$ 940.40** |
+
+Normal scenario:
+
+```text
+Savings: R$ 24.00
+Final total: R$ 976.00
+```
+
+Result:
+
+**PIX scenario wins.**
+
+---
+
+## 🏗️ Architecture
+
+The application is fully static and runs entirely in the browser.
+
+```text
+User Input
+    │
+    ▼
+app.js
+    │
+    ▼
+calculator.js
+    │
+    ├── Pricing Rules
+    ├── Scenario Comparison
+    ├── Validation
+    └── Rounding Logic
+    │
+    ▼
+Calculated Result
+    │
+    ▼
+DOM Rendering
+```
+
+### Main files
+
+```text
+calculator.js   Independent pricing engine
+app.js          Form handling and UI integration
+theme.js        Light/dark theme preference
+rules.js        Synthetic catalog and pricing rules
+```
+
+The pricing engine is separated from the DOM, allowing the business rules to be tested independently from the user interface.
+
+---
+
+## 🔒 Privacy & Data Handling
+
+The calculator does not use:
+
+- backend services
+- databases
+- analytics
+- customer accounts
+- commercial APIs
+- persistent order storage
+
+Order data remains in memory and is discarded when the page reloads.
+
+The only persisted information is the user's visual theme preference.
+
+No real commercial data is included in the repository.
+
+---
+
+## 🧪 Testing
+
+The project includes calculation tests, audit tests, and browser-based UI tests.
+
+### Calculation tests
+
+```bash
 node tests/calculator.test.cjs
 node tests/audit.test.cjs
 ```
 
-A suíte cobre entradas inválidas, limites de faixas, progressivo, PIX marcado/desmarcado, desempates, conservação dos totais e uma matriz comparada com cálculo independente. A UI verifica resultados, erro e recuperação, teclado, persistência de tema e ausência de rolagem horizontal em 1440, 390 e 320 px nos dois temas. `audit.test.cjs` audita cálculos; não é scanner de segredos. Não há medição de cobertura ou workflow CI configurado.
+The test suites cover:
 
-## Docker
+- invalid inputs
+- discount tier boundaries
+- progressive pricing
+- PIX enabled and disabled
+- tie-breaking behavior
+- total conservation
+- independent calculation comparison
 
-Com Docker e Compose instalados:
+### UI tests
 
-```sh
+With Node.js and Microsoft Edge installed:
+
+```bash
+npm install
+npm test
+```
+
+Playwright validates:
+
+- calculation results
+- validation errors and recovery
+- keyboard interaction
+- theme persistence
+- responsive behavior
+- absence of horizontal scrolling
+
+Tested viewport widths include:
+
+```text
+1440px
+390px
+320px
+```
+
+in both light and dark themes.
+
+---
+
+## 🐳 Docker
+
+The application can also be served locally using Docker and Nginx.
+
+```bash
 docker compose up --build -d
 ```
 
-Abra [localhost:8081](http://localhost:8081). Encerre com `docker compose down`. Nginx serve os mesmos arquivos estáticos, sem build da aplicação. A imagem e seu contexto incluem somente os arquivos de execução autorizados. Configuração Docker preservada; execução do container não validada nesta atualização porque Docker não está disponível no ambiente de testes.
+Open:
 
-## Publicação
+```text
+http://localhost:8081
+```
 
-Repositório: [calculadora-comercial-publica](https://github.com/leviroiz/calculadora-comercial-publica), branch `main`. URL de aplicação hospedada ainda não confirmada. Não há configuração de deploy versionada.
+Stop the environment with:
 
-## Autor e licença
+```bash
+docker compose down
+```
 
-Projeto por **Carlos Levi** — [GitHub](https://github.com/leviroiz). Licença a definir: o repositório não contém `LICENSE`.
+Docker serves the same static application files without requiring a separate build process.
+
+> Docker execution has not yet been validated in the current test environment.
+
+---
+
+## ▶️ Running Locally
+
+Because the application is static, you can also open:
+
+```text
+index.html
+```
+
+directly in a browser.
+
+For the complete test environment, use the Node.js or Docker instructions above.
+
+---
+
+## ⚠️ Limitations
+
+This project is a portfolio demonstration and not a production commercial pricing engine.
+
+It does not include:
+
+- real product catalogs
+- official pricing policies
+- real payment conditions
+- backend validation
+- authentication
+- persistent orders
+- production analytics
+- commercial integrations
+
+There is currently no automated CI workflow configured.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
