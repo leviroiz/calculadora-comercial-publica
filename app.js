@@ -2,134 +2,129 @@
 const $ = (id) => document.getElementById(id);
 const format = (cents) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-const formatUnit = (cents) =>
-  (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 4,
-  });
-let sequence = 0;
-function addItem() {
-  const id = ++sequence;
+for (const [ref, rule] of Object.entries(DiscountRules.progressive)) {
   const row = document.createElement("div");
-  row.className = "item";
-  row.innerHTML = `<label for="product-${id}">Referência / produto<input id="product-${id}" list="references" data-field="product" placeholder="Código ou nome" maxlength="120"></label><label for="quantity-${id}">Quantidade<input id="quantity-${id}" data-field="quantity" type="number" min="1" max="100000" step="1" value="1"></label><label for="price-${id}">Preço base (R$)<input id="price-${id}" data-field="price" inputmode="decimal" placeholder="0,00"></label><button class="remove" type="button" aria-label="Remover item ${id}">×</button><div class="line-total">Subtotal: —</div><div class="line-result"></div>`;
-  row.querySelector(".remove").onclick = () => {
-    row.remove();
-    update();
-    $("add").focus();
-  };
-  row.addEventListener("input", (event) => {
-    if (event.target.dataset.field === "product") {
-      const product = event.target.value.trim();
-      const official = Object.hasOwn(DiscountRules.progressive, product)
-        ? DiscountRules.progressive[product]
-        : null;
-      const price = row.querySelector("[data-field=price]");
-      if (official)
-        price.value = (official.basePrice / 100).toFixed(2).replace(".", ",");
-      else if (price.readOnly) price.value = "";
-      price.readOnly = !!official;
-    }
-    update();
-  });
+  row.className = "progressive-card";
+  row.innerHTML = `<div><strong>${rule.name}</strong><p>${ref} · Base fictícia: ${format(rule.basePrice)}</p></div><label for="qty-${ref}">Quantidade<input id="qty-${ref}" data-ref="${ref}" inputmode="numeric" type="number" min="0" max="100000" step="1" value="0"></label><div class="line-result" id="result-${ref}"></div>`;
   $("items").append(row);
-  update();
-  row.querySelector("input").focus();
 }
-function readItems() {
-  return [...$("items").children].map((row) =>
-    Object.fromEntries(
-      [...row.querySelectorAll("input")].map((input) => [
-        input.dataset.field,
-        input.value,
+function readOrder() {
+  if (
+    [...document.querySelectorAll("[data-ref]")].some(
+      (input) => input.validity.badInput,
+    )
+  )
+    throw new Error("Informe quantidades inteiras válidas.");
+  return {
+    gross: $("order-gross").value,
+    pix: $("payment-pix").checked,
+    quantities: Object.fromEntries(
+      [...document.querySelectorAll("[data-ref]")].map((input) => [
+        input.dataset.ref,
+        input.value === "" ? "0" : input.value,
       ]),
     ),
-  );
+  };
 }
 function update() {
-  const items = readItems();
-  $("count").textContent =
-    `${items.length} ${items.length === 1 ? "item" : "itens"}`;
-  let error = "";
-  const rows = [...$("items").children];
-  rows.forEach((row, index) => {
-    row.querySelector(".line-result").textContent = "";
-    try {
-      const result = DiscountCalculator.calculate(
-        [items[index]],
-        DiscountRules,
-      );
-      row.querySelector(".line-total").textContent =
-        `Subtotal bruto: ${format(result.gross)}`;
-    } catch (e) {
-      row.querySelector(".line-total").textContent = "Subtotal: —";
-      error ||= `Item ${index + 1}: ${e.message}`;
-    }
-  });
-  let result;
+  $("pix-scenario").hidden = true;
+  $("normal-scenario").hidden = true;
+  document
+    .querySelectorAll(".line-result")
+    .forEach((el) => (el.textContent = ""));
+  let r;
   try {
-    result = DiscountCalculator.calculate(items, DiscountRules);
+    r = DiscountCalculator.calculate(readOrder(), DiscountRules);
   } catch (e) {
-    error ||= e.message;
-  }
-  $("error").textContent = error;
-  if (error || !items.length) {
-    $("gross").textContent = error ? "—" : format(0);
-    $("winner").textContent = error ? "Complete os itens" : "Monte seu pedido";
-    $("winner-note").textContent = error
-      ? "Preencha os campos válidos para calcular o pedido completo."
-      : "Adicione um produto para começar.";
-    ["saving", "final-total", "progressive-total", "loyalty-total"].forEach(
-      (id) => ($(id).textContent = "—"),
-    );
-    $("difference").textContent = "";
-    $("rate").textContent = "—";
-    $("current-rate").textContent = "—";
-    $("loyalty-saving").textContent = "Aguardando pedido válido.";
-    $("progressive-saving").textContent = "Aguardando pedido válido.";
+    $("error").textContent =
+      $("order-gross").value ||
+      [...document.querySelectorAll("[data-ref]")].some(
+        (el) => el.value && el.value !== "0",
+      )
+        ? e.message
+        : "";
+    [
+      "gross",
+      "progressive-gross",
+      "remainder-gross",
+      "remainder-saving",
+      "remainder-total",
+      "final-total",
+      "saving",
+      "current-rate",
+    ].forEach((id) => ($(id).textContent = "—"));
+    $("winner").textContent = "Informe um pedido válido";
+    $("winner-note").textContent =
+      "Confira o valor bruto e as quantidades para calcular.";
     $("next").textContent = "A partir de R$ 1.500,00, desconto de 5%.";
     return;
   }
-  rows.forEach((row, index) => {
-    const line = result.lines[index];
-    row.querySelector(".line-result").textContent =
-      `${line.rule}${line.rule === "Fidelidade" ? ` ${result.percent}%` : ` · faixa de ${line.minimumQuantity}+ (${line.referenceQuantity} na referência)`} · Unitário final: ${formatUnit(line.finalUnitPrice)} · Economia: ${format(line.saving)} · Total: ${format(line.finalTotal)}`;
-  });
-  $("gross").textContent = format(result.gross);
-  $("rate").textContent = `${result.percent}%`;
-  $("current-rate").textContent = `${result.percent}% sobre o bruto`;
-  $("progressive-total").textContent = format(result.progressiveTotal);
-  $("loyalty-total").textContent = format(result.loyaltyTotal);
-  $("progressive-saving").textContent =
-    `Economia: ${format(result.progressiveSaving)}`;
-  $("loyalty-saving").textContent = `Economia: ${format(result.loyaltySaving)}`;
-  $("winner").textContent = "Melhor desconto por item";
+  $("error").textContent = "";
+  const normalProgressive = r.scenarios.normal.lines.filter(line => line.rule === "Progressivo").reduce((sum, line) => sum + line.saving, 0);
+  $("normal-progressive-saving").textContent = format(normalProgressive);
+  $("normal-loyalty-saving").textContent = format(r.standardSaving - normalProgressive);
+  $("normal-saving").textContent = format(r.standardSaving);
+  $("normal-total").textContent = format(r.scenarios.normal.finalTotal);
+  $("normal-scenario").hidden = false;
+  for (const line of r.lines) {
+    const percentage =
+      line.rule === "PIX" ? "5%" : line.rule === "Fidelidade"
+        ? `${r.percent}%`
+        : `${((1 - line.finalUnitPrice / line.basePrice) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% aprox. · faixa ${line.minimumQuantity}+`;
+    $(`result-${line.product}`).textContent =
+      `Bruto: ${format(line.subtotal)} · ${line.rule} ${percentage} · Desconto: ${format(line.saving)} · Total: ${format(line.finalTotal)}`;
+  }
+  for (const [id, value] of Object.entries({
+    gross: r.gross,
+    "progressive-gross": r.progressiveGross,
+    "remainder-gross": r.remainderGross,
+    "remainder-saving": r.remainderSaving,
+    "remainder-total": r.remainderTotal,
+    "final-total": r.finalTotal,
+    saving: r.saving,
+  }))
+    $(id).textContent = format(value);
+  $("current-rate").textContent = `${r.percent}% sobre o bruto`;
+  $("winner").textContent = `Melhor condição: ${r.pixApplied ? "Cenário PIX + Progressivo" : r.condition}`;
+  if ($("payment-pix").checked) {
+    const pix = r.scenarios.pix;
+    $("pix-progressive-saving").textContent = format(pix.lines.filter((line) => line.rule === "Progressivo").reduce((sum, line) => sum + line.saving, 0));
+    $("pix-reference-saving").textContent = format(pix.lines.filter((line) => line.rule === "PIX").reduce((sum, line) => sum + line.saving, 0));
+    $("pix-remainder-saving").textContent = format(pix.remainderSaving);
+    $("pix-total-saving").textContent = format(pix.saving);
+    $("pix-final-total").textContent = format(pix.finalTotal);
+    $("pix-scenario").hidden = false;
+  }
+  $("remainder-label").textContent = r.pixApplied ? "Desconto PIX no restante" : "Desconto Fidelidade no restante";
   $("winner-note").textContent =
-    "Fidelidade e Progressivo podem coexistir no pedido. Cada item recebe somente o melhor.";
-  $("saving").textContent = format(result.saving);
-  $("final-total").textContent = format(result.finalTotal);
-  $("difference").textContent =
-    `${format(result.difference)} de economia adicional em relação ao melhor cenário isolado.`;
-  $("next").textContent = result.next
-    ? `Faltam ${format(result.next.remaining)} em itens para atingir ${result.next.percent}% de desconto.`
+    ($("payment-pix").checked
+      ? `Economia no cenário normal: ${format(r.standardSaving)}; Economia no cenário PIX + Progressivo: ${format(r.pixSaving)}. ${r.standardSaving === r.pixSaving ? "Empate; mantido o cenário normal." : r.pixApplied ? "O cenário PIX + Progressivo venceu por maior economia." : "O cenário normal venceu por maior economia."} `
+      : "PIX desmarcado; cenário normal aplicado. ") +
+    (r.pixApplied
+      ? "Cada referência recebe PIX 5% ou progressivo, o que for maior. Restante: PIX 5%. Fidelidade não entra neste cenário."
+      : `Cada referência recebe Fidelidade ou progressivo. Restante: Fidelidade ${r.percent}%.`);
+  $("next").textContent = r.next
+    ? `Faltam ${format(r.next.remaining)} no valor bruto para atingir ${r.next.percent}%.`
     : "O pedido já alcançou a maior faixa: 18%.";
 }
-$("add").onclick = addItem;
+$("order-gross").addEventListener("input", update);
+$("payment-pix").addEventListener("change", update);
+$("items").addEventListener("input", update);
 update();
 if (document.modelContext?.registerTool) {
   try {
     Promise.resolve(
       document.modelContext.registerTool({
         name: "read_discount_comparison",
-        description: "Lê os descontos por item do pedido atual.",
+        description:
+          "Lê o cálculo do pedido bruto e suas referências progressivas.",
         inputSchema: {
           type: "object",
           properties: {},
           additionalProperties: false,
         },
         annotations: { readOnlyHint: true },
-        execute: () => DiscountCalculator.calculate(readItems(), DiscountRules),
+        execute: () => DiscountCalculator.calculate(readOrder(), DiscountRules),
       }),
     ).catch(() => {});
   } catch {}

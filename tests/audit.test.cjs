@@ -1,99 +1,25 @@
-const assert = require("node:assert/strict");
-const path = require("node:path");
-const root = process.env.CALCULATOR_ROOT || path.resolve(__dirname, "..");
-require(path.join(root, "rules.js"));
-require(path.join(root, "calculator.js"));
-const calc = (items) => DiscountCalculator.calculate(items, DiscountRules);
-const item = (product, quantity, price = "0") => ({ product, quantity, price });
-let checks = 0;
-const eq = (a, b) => {
-  assert.deepEqual(a, b);
-  checks++;
-};
-const bad = (i) => {
-  assert.throws(() => calc([i]));
-  checks++;
-};
-for (const price of [
-  "",
-  " ",
-  "-0.01",
-  "1.234",
-  "1,234.56",
-  "1e3",
-  "Infinity",
-  "NaN",
-  "1000000.01",
-])
-  bad(item("X", 1, price));
-for (const q of ["", 0, -1, 1.1, 100001, Infinity, NaN]) bad(item("X", q, "1"));
-eq(calc([item("X", 1, "0")]).finalTotal, 0);
-eq(DiscountCalculator.moneyToCents(" 001,2 "), 120);
-eq(DiscountCalculator.moneyToCents("0.29"), 29);
-eq(calc([item("X", 1000, "1000000")]).gross, 100000000000);
-bad(item("X", 1001, "1000000"));
-for (const [price, pct, total] of [
-  ["1499.99", 0, 149999],
-  ["1500", 5, 142500],
-  ["2999.99", 5, 284999],
-  ["3000", 10, 270000],
-  ["4999.99", 10, 449999],
-  ["5000", 18, 410000],
-]) {
-  const r = calc([item("X", 1, price)]);
-  eq([r.percent, r.finalTotal, r.saving], [pct, total, r.gross - total]);
+const assert=require('node:assert/strict');require('../rules.js');require('../calculator.js');
+let checks=0; const eq=(a,b)=>{assert.deepEqual(a,b);checks++};
+// Independent oracle: choose the larger monetary benefit per reference,
+// then round PIX once on all eligible gross value.
+for(const gross of [100000,150000,300000,500000,500001]) for(const quantity of [0,3,4,7,8,12]) for(const pix of [false,true]) {
+ const quantities=Object.fromEntries(Object.keys(DiscountRules.progressive).map(k=>[k,quantity]));
+ const subtotal=Object.values(DiscountRules.progressive).reduce((s,r)=>s+r.basePrice*quantity,0);
+ if(subtotal>gross)continue;
+ const pct=[...DiscountRules.loyalty].reverse().find(t=>gross>=t.minimum)?.percent||0;
+ let normalSaving=Math.round((gross-subtotal)*pct/100), pixBase=gross-subtotal, progSaving=0;
+ for(const rule of Object.values(DiscountRules.progressive)) {
+  const base=rule.basePrice*quantity;
+  const unit=[...rule.tiers].reverse().find(t=>quantity>=t.minimumQuantity)?.unitPrice??rule.basePrice;
+  const progressive=base-unit*quantity;
+  normalSaving+=Math.max(progressive,Math.round(base*pct/100));
+  if(progressive*100>base*5)progSaving+=progressive;else pixBase+=base;
+ }
+ const pixSaving=progSaving+Math.round(pixBase*5/100);
+ const r=DiscountCalculator.calculate({gross:(gross/100).toFixed(2),quantities,pix},DiscountRules);
+ eq(r.standardSaving,normalSaving);eq(r.pixSaving,pixSaving);
+ eq(r.saving,pix?Math.max(normalSaving,pixSaving):normalSaving);
+ eq(r.pixApplied,pix&&pixSaving>normalSaving);
+ for(const s of Object.values(r.scenarios)) {eq(s.lines.reduce((a,l)=>a+l.finalTotal,0)+s.remainderTotal,s.finalTotal);eq(gross-s.finalTotal,s.saving);}
 }
-for (const ref of Object.keys(DiscountRules.progressive))
-  for (const qty of [3, 4, 7, 8])
-    for (const gross of [150000, 300000, 500000]) {
-      const rule = DiscountRules.progressive[ref];
-      const r = calc([
-        item(ref, qty, "invalid"),
-        item("Other", 1, ((gross - rule.basePrice * qty) / 100).toFixed(2)),
-      ]);
-      const expected =
-        qty >= 8
-          ? rule.tiers[1].unitPrice
-          : qty >= 4
-            ? rule.tiers[0].unitPrice
-            : rule.basePrice;
-      eq(
-        r.lines[0].finalTotal,
-        Math.min(
-          expected * qty,
-          rule.basePrice * qty -
-            Math.round((rule.basePrice * qty * r.percent) / 100),
-        ),
-      );
-      eq(
-        r.finalTotal,
-        r.lines.reduce((s, l) => s + l.finalTotal, 0),
-      );
-      eq(r.saving, r.gross - r.finalTotal);
-      assert.ok(
-        r.finalTotal <= r.loyaltyTotal && r.finalTotal <= r.progressiveTotal,
-      );
-      checks++;
-    }
-const grouped = calc([item(" DEMO-D ", 5), item("DEMO-D", 5)]);
-eq(grouped.finalTotal, 28000);
-eq(
-  grouped.lines.map((l) => l.referenceQuantity),
-  [10, 10],
-);
-// Rounding happens on the discount of each line, not on each unit or the order.
-const r = calc([item("X", 3, "0.07"), item("Other", 1, "1500")]);
-eq(r.lines[0].finalTotal, 20);
-eq(r.lines[0].finalUnitPrice, 6.65);
-const split = calc([
-  item("X", 1, "0.07"),
-  item("X", 1, "0.07"),
-  item("X", 1, "0.07"),
-  item("Other", 1, "1500"),
-]);
-eq(r.finalTotal - split.finalTotal, -1);
-for (const name of ["constructor", "toString", "<img src=x onerror=alert(1)>"])
-  eq(calc([item(name, 1, "10")]).gross, 1000);
-eq(calc([]).next.remaining, 150000);
-eq(calc([item("X", 1, "5000")]).next, null);
-console.log(`${checks} verificações adicionais passaram.`);
+console.log(`${checks} verificações de auditoria passaram.`);

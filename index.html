@@ -6,10 +6,8 @@
     <title>Calculadora de descontos | Demo Comercial</title>
     <meta
       name="description"
-      content="Simulador de descontos com produtos e condições fictícias para portfólio." />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d4ed8'/%3E%3Ctext x='7' y='24' fill='white' font-size='24'%3ED%3C/text%3E%3C/svg%3E" />
+      content="Simulador com dados sintéticos adaptados para portfólio." />
+    <link rel="icon" href="assets/demo-mark.svg" />
     <script src="theme.js"></script>
     <link rel="stylesheet" href="styles.css" />
     <script defer src="rules.js"></script>
@@ -27,7 +25,7 @@
           height="52" />
         <div>
           <strong class="brand-name">Demo Comercial</strong
-          ><span class="brand-caption">PORTFÓLIO · DADOS FICTÍCIOS</span>
+          ><span class="brand-caption">PORTFÓLIO · DADOS SINTÉTICOS</span>
         </div>
       </div>
       <div class="header-actions">
@@ -66,9 +64,11 @@
         <div>
           <p class="eyebrow">CONDIÇÕES COMERCIAIS</p>
           <h1>Calculadora de descontos</h1>
-          <p>Monte o pedido e aplique o melhor desconto em cada item.</p>
+          <p>
+            Informe o valor do pedido e as quantidades das referências abaixo.
+          </p>
         </div>
-        <span class="version">Demonstração</span>
+        <span class="version">Demo sintética</span>
       </div>
       <div class="notice">
         <strong>Fidelidade definido pelo valor bruto.</strong> Em cada item,
@@ -77,36 +77,37 @@
       </div>
       <div class="workspace">
         <section class="panel order">
-          <div class="section-title">
-            <h2>Itens do pedido</h2>
-            <span id="count">0 itens</span>
-          </div>
-          <p class="hint">
-            Digite a referência exata para preencher o preço fictício. Outras
-            itens usam o preço base informado e Fidelidade. Quantidades da mesma
-            referência são somadas.
+          <label class="order-label" for="order-gross"
+            >Valor bruto total do pedido (R$)</label
+          >
+          <input
+            id="order-gross"
+            inputmode="decimal"
+            placeholder="Ex.: 1500,00"
+            aria-describedby="gross-hint error"
+            autocomplete="off" />
+          <p class="hint" id="gross-hint">
+            Inclua todas as peças, antes dos descontos e sem frete. Digite sem
+            separador de milhar.
           </p>
-          <datalist id="references">
-            <option value="DEMO-A">Caderno criativo</option>
-            <option value="DEMO-B">Estojo modular</option>
-            <option value="DEMO-C">Organizador de mesa</option>
-            <option value="DEMO-D">Bloco de notas</option>
-          </datalist>
+          <label class="pix-option" for="payment-pix">
+            <input id="payment-pix" type="checkbox" aria-describedby="pix-hint" />
+            <span>Pagamento via PIX — 5%</span>
+          </label>
+          <p class="hint" id="pix-hint">Compara PIX 5% ou progressivo por referência, mais PIX 5% no restante, com o cenário normal. Sem acumular descontos. Em empate, mantém o cenário normal.</p>
+          <h2>Referências com progressivo</h2>
+          <p class="hint">
+            Informe apenas as quantidades que já estão incluídas no valor acima.
+            Deixe zero nas demais.
+          </p>
           <div id="items"></div>
-          <button id="add" class="secondary" type="button">
-            + Adicionar item
-          </button>
           <div id="error" role="alert"></div>
-          <div class="gross">
-            <span>Valor bruto do pedido</span
-            ><strong id="gross">R$ 0,00</strong>
-          </div>
         </section>
         <aside>
           <section class="recommendation" aria-live="polite">
             <p class="eyebrow">MELHOR CONDIÇÃO</p>
-            <h2 id="winner">Monte seu pedido</h2>
-            <p id="winner-note">Adicione um produto para começar.</p>
+            <h2 id="winner">Informe o valor do pedido</h2>
+            <p id="winner-note">O cálculo é automático.</p>
             <p>Faixa Fidelidade: <strong id="current-rate">—</strong></p>
             <div class="saving">
               <span>Total final do pedido</span
@@ -115,7 +116,33 @@
             <div class="saving">
               <span>Economia no pedido</span><strong id="saving">—</strong>
             </div>
-            <p id="difference"></p>
+            <dl class="breakdown">
+              <dt>Valor bruto</dt>
+              <dd id="gross">—</dd>
+              <dt>Bruto das referências progressivas</dt>
+              <dd id="progressive-gross">—</dd>
+              <dt>Restante do pedido (bruto)</dt>
+              <dd id="remainder-gross">—</dd>
+              <dt id="remainder-label">Desconto Fidelidade no restante</dt>
+              <dd id="remainder-saving">—</dd>
+              <dt>Restante após desconto</dt>
+              <dd id="remainder-total">—</dd>
+            </dl>
+          </section>
+          <section id="normal-scenario" class="panel next" aria-live="polite" hidden>
+<h2>Cenário normal</h2><dl class="breakdown"><dt>Economia com progressivo</dt><dd id="normal-progressive-saving">—</dd><dt>Economia com fidelidade</dt><dd id="normal-loyalty-saving">—</dd><dt>Economia total do cenário</dt><dd id="normal-saving">—</dd><dt>Total final do cenário</dt><dd id="normal-total">—</dd></dl></section>
+<section id="pix-scenario" class="panel next" aria-live="polite" hidden>
+            <h2>Cenário PIX + Progressivo</h2>
+            <dl class="breakdown">
+              <dt>Economia com progressivo nas referências</dt>
+              <dd id="pix-progressive-saving">—</dd>
+              <dt>Economia com PIX 5% nas referências</dt>
+              <dd id="pix-reference-saving">—</dd>
+              <dt>Economia com PIX 5% no restante</dt>
+              <dd id="pix-remainder-saving">—</dd>
+              <dt>Economia total do cenário</dt>
+              <dd id="pix-total-saving">—</dd><dt>Total final do cenário</dt><dd id="pix-final-total">—</dd>
+            </dl>
           </section>
           <section class="panel next">
             <h2>Próxima faixa Fidelidade</h2>
@@ -128,34 +155,11 @@
           </section>
         </aside>
       </div>
-      <section class="comparison">
-        <div class="section-title">
-          <h2>Cenários isolados para conferência</h2>
-          <span>Sem combinação por item</span>
-        </div>
-        <div class="scenario-grid">
-          <article class="panel">
-            <div class="section-title">
-              <h3>Progressivo</h3>
-              <span id="progressive-status" class="badge">4 referências</span>
-            </div>
-            <strong class="total" id="progressive-total">—</strong>
-            <p id="progressive-saving">Aguardando pedido válido.</p>
-          </article>
-          <article class="panel">
-            <div class="section-title">
-              <h3>Fidelidade</h3>
-              <span class="badge" id="rate">0%</span>
-            </div>
-            <strong class="total" id="loyalty-total">—</strong>
-            <p id="loyalty-saving">Desconto sobre o valor bruto dos itens.</p>
-          </article>
-        </div>
-      </section>
       <footer>
-        Base desta simulação: total bruto dos itens, sem frete. Totais
-        arredondados por item para centavos; unitários com até 4 casas. Empates
-        usam Fidelidade. O pedido não é salvo ao fechar ou atualizar a página.
+        Valor bruto sem frete. Cada peça recebe somente o melhor desconto.
+        Economia arredondada para centavos por referência e no restante do
+        pedido. PIX é arredondado sobre a parcela bruta que recebe PIX e rateado no detalhamento. Empates por referência usam Fidelidade no cenário normal e PIX no cenário PIX; empate entre cenários mantém o normal. O pedido não é salvo ao fechar ou atualizar
+        a página.
       </footer>
     </main>
   </body>

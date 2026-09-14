@@ -495,3 +495,19 @@ header {
     padding-inline: 9px;
   }
 }
+
+.order-label { display: block; font-size: 19px; font-weight: bold; margin-bottom: 12px; }
+#order-gross { width: 100%; min-width: 0; font: bold 32px Arial, sans-serif; padding: 18px; border: 2px solid var(--input-border); border-radius: 8px; color: var(--text); background: var(--surface); }
+.progressive-card { display: grid; grid-template-columns: minmax(0, 1fr) 100px; gap: 12px; padding: 18px 0; border-top: 1px solid var(--border); align-items: center; }
+.progressive-card p, .progressive-card label { font-size: 13px; color: var(--muted); }
+.progressive-card input { display: block; width: 100%; font: inherit; font-size: 18px; margin-top: 6px; padding: 12px; color: var(--text); background: var(--surface); border: 1px solid var(--input-border); border-radius: 6px; }
+.breakdown { font-size: 14px; line-height: 1.5; border-top: 1px solid var(--border); padding-top: 12px; }
+.breakdown dt { color: var(--muted); margin-top: 12px; }
+.breakdown dd { margin: 2px 0 0; font-weight: bold; }
+@media(max-width: 380px) { .progressive-card { grid-template-columns: minmax(0, 1fr) 80px; } #order-gross { font-size: 26px; } }
+
+.pix-option { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--soft); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+.pix-option input { width: 20px; height: 20px; margin: 0; flex: 0 0 20px; accent-color: var(--accent); }
+.pix-option input:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+@media(max-width:380px){.brand{font-size:18px}.brand .brand-caption{font-size:7px}.brand-logo{width:32px;height:32px}}

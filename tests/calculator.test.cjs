@@ -1,74 +1,24 @@
-const assert = require("node:assert/strict");
-require("../rules.js");
-require("../calculator.js");
-const calc = (items, rules = DiscountRules) =>
-  DiscountCalculator.calculate(items, rules);
-const item = (product, quantity, price = "0") => ({ product, quantity, price });
-let checks = 0;
-const check = (condition) => {
-  assert.ok(condition);
-  checks++;
-};
-for (const [gross, percent] of [
-  ["1499,99", 0],
-  ["1500", 5],
-  ["2999,99", 5],
-  ["3000", 10],
-  ["4999,99", 10],
-  ["5000", 18],
-])
-  check(calc([item("Outro", 1, gross)]).percent === percent);
-for (const [ref, base, six, ten] of [
-  ["DEMO-A", 7200, 6600, 6000],
-  ["DEMO-B", 4800, 4500, 4200],
-  ["DEMO-C", 4800, 4500, 4200],
-  ["DEMO-D", 3200, 3000, 2800],
-]) {
-  for (const [qty, expected] of [
-    [3, base],
-    [4, six],
-    [7, six],
-    [8, ten],
-  ]) {
-    const r = calc([item(ref, qty)]);
-    check(r.finalTotal === expected * qty);
-    check(r.gross === base * qty);
-  }
+const assert = require('node:assert/strict');
+require('../rules.js'); require('../calculator.js');
+const rules = DiscountRules, calc = (gross, quantities={}, pix=false, r=rules) => DiscountCalculator.calculate({gross,quantities,pix},r);
+let checks=0; const eq=(a,b)=>{assert.deepEqual(a,b);checks++};
+eq(calc('1000', {'DEMO-A':4},true).saving,5960);
+eq(calc('1000', {'DEMO-A':4},true).scenarios.pix.remainderSaving,3560);
+eq(calc('1000', {'DEMO-A':4},true).finalTotal,94040);
+eq(calc('1000', {'DEMO-A':4}).saving,2400);
+eq(calc('1500', {},true).pixApplied,false);
+eq(calc('5000', {'DEMO-A':8},true).condition,'Fidelidade');
+for(const tier of rules.loyalty) for(const offset of [-1,0,1]) {
+ const gross=tier.minimum+offset;
+ const expected=[...rules.loyalty].reverse().find(t=>gross>=t.minimum)?.percent||0;
+ eq(calc((gross/100).toFixed(2)).percent,expected);
 }
-const mixed = calc([item("DEMO-A", 10), item("Outras peças", 10, "78,00")]);
-check(mixed.gross === 150000);
-check(mixed.finalTotal === 134100);
-check(mixed.saving === 15900);
-check(mixed.lines[0].rule === "Progressivo");
-check(mixed.lines[1].rule === "Fidelidade");
-check(mixed.lines[1].finalUnitPrice === 7410);
-const twelve = calc([item("DEMO-D", 10), item("Outros", 1, "2680")]);
-check(twelve.lines[0].rule === "Progressivo");
-check(twelve.percent === 10);
-const sixteen = calc([item("DEMO-A", 10), item("Outros", 1, "4280")]);
-check(sixteen.lines.every((l) => l.rule === "Fidelidade"));
-const split = calc([item("DEMO-A", 4), item("DEMO-A", 6)]);
-check(split.lines.every((l) => l.finalUnitPrice === 6000));
-const tieRules = {
-  loyalty: [{ minimum: 0, percent: 10 }],
-  progressive: {
-    T: { basePrice: 1000, tiers: [{ minimumQuantity: 1, unitPrice: 900 }] },
-  },
-};
-check(calc([item("T", 1)], tieRules).lines[0].rule === "Fidelidade");
-check(calc([]).finalTotal === 0);
-check(calc([item("__proto__", 1, "10")]).gross === 1000);
-for (const bad of [
-  item("", 1, "10"),
-  item("x", 0, "10"),
-  item("x", 1.5, "10"),
-  item("x", 1, "-1"),
-  item("x", 1, "abc"),
-]) {
-  assert.throws(() => calc([bad]));
-  checks++;
-}
-check(mixed.lines.reduce((n, l) => n + l.finalTotal, 0) === mixed.finalTotal);
-console.log(
-  `${checks} verificações passaram; exemplo misto: R$ ${(mixed.finalTotal / 100).toFixed(2)}`,
-);
+const tie={loyalty:[],progressive:{T:{basePrice:100,tiers:[{minimumQuantity:1,unitPrice:95}]}}};
+eq(calc('2',{T:1},true,tie).scenarios.pix.lines[0].rule,'PIX');
+eq(calc('1',{T:1},true,tie).pixApplied,false);
+for(const bad of ['', '-1','0','1e3','1.001','1,000.00','Infinity','1000000000.01']) {assert.throws(()=>calc(bad)); checks++;}
+for(const bad of [-1,1.2,'x',100001]) {assert.throws(()=>calc('1000',{'DEMO-A':bad})); checks++;}
+assert.throws(()=>calc('1',{'DEMO-A':1}));checks++;
+for(const key of ['unknown','constructor','toString']){assert.throws(()=>calc('1000',{[key]:1}));checks++;}
+eq(DiscountCalculator.moneyToCents('0,29'),29);
+console.log(`${checks} verificações de cálculo passaram.`);
