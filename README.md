@@ -1,151 +1,180 @@
-<div align="center">
-
 # Commercial Pricing Calculator
 
-**Static pricing simulator that compares loyalty discounts, progressive pricing, and PIX scenarios to identify the highest customer savings.**
+A static pricing simulator built to compare multiple commercial pricing scenarios and automatically apply the option with the highest customer savings.
+
+The interesting part is not the interface itself. The core of the project is the pricing engine: it has to compare loyalty discounts, progressive pricing and a demonstrative PIX scenario without stacking discounts incorrectly or producing inconsistent totals.
+
+All products, prices and commercial rules in this repository are synthetic.
 
 <p>
-  <img src="https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
-  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5">
-  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3">
-  <img src="https://img.shields.io/badge/Playwright-UI_Tests-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" alt="Playwright">
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
+  <img src="https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/Playwright-UI_tests-2EAD33?style=flat-square&logo=playwright&logoColor=white" alt="Playwright">
+  <img src="https://img.shields.io/badge/Static-Browser_only-555555?style=flat-square" alt="Static browser application">
 </p>
-
-</div>
 
 ---
 
-## 🚀 Overview
+## Context
 
-This project is a static commercial pricing simulator built to compare multiple discount scenarios and automatically select the option that provides the highest customer savings.
+The calculator represents a commercial scenario where different pricing rules may apply to the same order.
 
-The calculator evaluates:
+The public demo compares:
 
-- loyalty discount tiers
-- progressive pricing by product reference
-- a demonstrative PIX scenario
-- the best discount per eligible item
-- total savings and final order value by scenario
+- loyalty discounts based on gross order value
+- progressive pricing by product reference and quantity
+- a demonstrative PIX discount
+- the best available rule for each eligible reference
+- savings and final totals for each scenario
 
-> [!IMPORTANT]
-> All products, SKUs, prices, discount tiers, and commercial conditions used in this repository are **synthetic and adapted for portfolio purposes**.
+The application then compares the resulting scenarios and keeps the one with the highest total savings.
+
+> [!NOTE]
+> The catalog, SKUs, values, discount tiers and payment conditions are synthetic and adapted for demonstration purposes.
 >
-> They do not represent real offers, company policies, or official payment rules.
+> They do not represent real commercial policies or official payment rules.
 
 ---
 
-## 🖥️ Demo Preview
+## What made this tricky
 
-<p align="center">
-  <img src="docs/images/calculator-preview.png" alt="Commercial pricing calculator demo" width="1000">
-</p>
+### Rules can apply at different levels
 
-The interface compares loyalty, progressive pricing, and PIX scenarios and automatically highlights the option with the highest customer savings.
+The loyalty discount depends on the gross order value.
 
-The demo supports light and dark themes and runs entirely in the browser.
+Progressive pricing, however, depends on the quantity of a specific product reference.
+
+That means the calculator cannot simply choose one percentage and apply it to the whole order. Each eligible reference has to be evaluated independently, while the remaining order value follows the broader scenario rule.
+
+### Discounts cannot be stacked
+
+For a given product reference, the pricing engine compares the available benefits and applies only one.
+
+In the normal scenario:
+
+```text
+Loyalty vs. Progressive
+```
+
+In the PIX scenario:
+
+```text
+PIX vs. Progressive
+```
+
+The same unit never receives two discounts simultaneously.
+
+### Scenario comparison
+
+The normal and PIX scenarios are calculated independently.
+
+The calculator compares their total savings and only applies the PIX scenario when it produces a strictly greater benefit.
+
+If both scenarios result in the same total savings, the normal scenario is preserved.
+
+### Rounding matters
+
+Monetary calculations are handled in cents.
+
+PIX savings are rounded over the eligible gross value while preserving cumulative allocation across product references, avoiding inconsistent totals caused by rounding every line independently.
+
+### Totals must remain consistent
+
+Every scenario must preserve the relationship:
+
+```text
+gross total - savings = final total
+```
+
+The tests also verify that line totals plus the remaining order value match the scenario final total.
 
 ---
 
-## ✨ Key Features
+## Pricing model
 
-- automatic comparison between pricing scenarios
-- loyalty discount tiers based on gross order value
-- progressive pricing by product reference
-- demonstrative PIX comparison
-- no discount stacking on the same unit
-- deterministic tie-breaking rules
-- detailed savings breakdown
-- responsive interface
-- light and dark themes
-- keyboard-friendly interaction
-- client-side execution only
+The public demo uses the following synthetic catalog:
 
----
-
-## 🧮 Pricing Logic
-
-The public demo uses synthetic products and pricing rules:
-
-| SKU | Demo Product | Base Price | 4+ Units | 8+ Units |
+| SKU | Demo product | Base price | 4+ units | 8+ units |
 |---|---|---:|---:|---:|
 | DEMO-A | Creative Notebook | R$ 72.00 | R$ 66.00 | R$ 60.00 |
 | DEMO-B | Modular Pencil Case | R$ 48.00 | R$ 45.00 | R$ 42.00 |
 | DEMO-C | Desk Organizer | R$ 48.00 | R$ 45.00 | R$ 42.00 |
 | DEMO-D | Notepad | R$ 32.00 | R$ 30.00 | R$ 28.00 |
 
-### Loyalty tiers
+Loyalty tiers:
 
-| Gross Order Value | Discount |
+| Gross order value | Discount |
 |---|---:|
 | Below R$ 1,500 | 0% |
 | From R$ 1,500 | 5% |
 | From R$ 3,000 | 10% |
 | From R$ 5,000 | 18% |
 
-### Normal Scenario
-
-For each eligible product reference, the pricing engine compares:
-
-- loyalty discount
-- progressive pricing
-
-and applies whichever produces the greater benefit.
-
-The remaining order value receives the loyalty discount.
-
-### PIX Scenario
-
-For each eligible reference:
-
-- progressive pricing is applied when it provides more savings than the demonstrative **5% PIX discount**
-- otherwise, the PIX discount is applied
-
-The remaining eligible order value also receives the PIX discount.
-
-> Discounts are never stacked on the same unit.
+The PIX scenario uses a demonstrative **5% discount**.
 
 ---
 
-## ✅ Example
+## Example
 
-Gross order value:
-
-```text
-R$ 1,000.00
-```
-
-Order:
+Consider:
 
 ```text
-4 × DEMO-A
+Gross order value: R$ 1,000.00
+Quantity: 4 × DEMO-A
+PIX comparison: enabled
 ```
 
-PIX comparison enabled.
+For `DEMO-A`, progressive pricing reduces the unit price from:
 
-| Component | Savings |
-|---|---:|
-| Progressive pricing on DEMO-A | R$ 24.00 |
-| PIX discount on remaining R$ 712.00 | R$ 35.60 |
-| **Total PIX savings** | **R$ 59.60** |
-| **Final PIX total** | **R$ 940.40** |
+```text
+R$ 72.00 → R$ 66.00
+```
 
-Normal scenario:
+producing:
+
+```text
+4 × R$ 6.00 = R$ 24.00
+```
+
+in savings.
+
+The remaining order value is:
+
+```text
+R$ 1,000.00 - R$ 288.00 = R$ 712.00
+```
+
+The demonstrative 5% PIX discount on that remainder produces:
+
+```text
+R$ 35.60
+```
+
+Total PIX scenario savings:
+
+```text
+R$ 24.00 + R$ 35.60 = R$ 59.60
+```
+
+Final total:
+
+```text
+R$ 940.40
+```
+
+The normal scenario produces:
 
 ```text
 Savings: R$ 24.00
 Final total: R$ 976.00
 ```
 
-Result:
-
-**PIX scenario wins.**
+For this example, the PIX scenario produces the greater savings.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-The application is fully static and runs entirely in the browser.
+The application is fully static and runs in the browser.
 
 ```text
 User Input
@@ -156,10 +185,12 @@ app.js
     ▼
 calculator.js
     │
-    ├── Pricing Rules
-    ├── Scenario Comparison
-    ├── Validation
-    └── Rounding Logic
+    ├── Input validation
+    ├── Loyalty rules
+    ├── Progressive pricing
+    ├── PIX scenario
+    ├── Scenario comparison
+    └── Monetary rounding
     │
     ▼
 Calculated Result
@@ -168,78 +199,79 @@ Calculated Result
 DOM Rendering
 ```
 
-### Main files
+The main responsibilities are separated across:
 
 ```text
-calculator.js   Independent pricing engine
-app.js          Form handling and UI integration
-theme.js        Light/dark theme preference
-rules.js        Synthetic catalog and pricing rules
+calculator.js   Pricing engine and calculation rules
+rules.js        Synthetic catalog and pricing configuration
+app.js          User input and DOM rendering
+theme.js        Theme preference and persistence
 ```
 
-The pricing engine is separated from the DOM, allowing the business rules to be tested independently from the user interface.
+The pricing engine does not depend on the DOM, which allows the business rules to be tested independently from the interface.
 
 ---
 
-## 🔒 Privacy & Data Handling
+## Demo preview
 
-The calculator does not use:
+<p align="center">
+  <img src="docs/images/calculator-preview.png" alt="Commercial pricing calculator demo" width="1000">
+</p>
 
-- backend services
-- databases
-- analytics
-- customer accounts
-- commercial APIs
-- persistent order storage
+The interface displays both pricing scenarios, the applied rules, savings and final values.
 
-Order data remains in memory and is discarded when the page reloads.
-
-The only persisted information is the user's visual theme preference.
-
-No real commercial data is included in the repository.
+It supports light and dark themes and runs entirely on the client side.
 
 ---
 
-## 🧪 Testing
+## Tests
 
-The project includes calculation tests, audit tests, and browser-based UI tests.
+The repository includes calculation, audit and browser-based UI tests.
 
-### Calculation tests
-
-```bash
-node tests/calculator.test.cjs
-node tests/audit.test.cjs
-```
-
-The test suites cover:
-
-- invalid inputs
-- discount tier boundaries
-- progressive pricing
-- PIX enabled and disabled
-- tie-breaking behavior
-- total conservation
-- independent calculation comparison
-
-### UI tests
-
-With Node.js and Microsoft Edge installed:
+Run the complete suite with:
 
 ```bash
 npm install
 npm test
 ```
 
-Playwright validates:
+The test command executes:
+
+```text
+tests/calculator.test.cjs
+tests/audit.test.cjs
+tests/ui.test.cjs
+```
+
+The calculation tests cover:
+
+- loyalty tier boundaries
+- progressive pricing
+- PIX enabled and disabled
+- invalid monetary inputs
+- invalid quantities
+- unknown product references
+- tie-breaking rules
+
+The audit suite independently calculates expected results across multiple combinations of:
+
+- order values
+- quantities
+- PIX enabled or disabled
+
+It verifies scenario savings, final totals and conservation of monetary values.
+
+The Playwright suite validates the actual interface using Microsoft Edge, including:
 
 - calculation results
 - validation errors and recovery
+- PIX interaction
 - keyboard interaction
 - theme persistence
+- JavaScript runtime errors
 - responsive behavior
-- absence of horizontal scrolling
 
-Tested viewport widths include:
+The interface is checked at:
 
 ```text
 1440px
@@ -251,49 +283,67 @@ in both light and dark themes.
 
 ---
 
-## 🐳 Docker
+## Privacy and data handling
 
-The application can also be served locally using Docker and Nginx.
+The application has no backend.
+
+It does not use:
+
+- databases
+- customer accounts
+- commercial APIs
+- analytics
+- persistent order storage
+
+Order information remains in browser memory and disappears when the page is reloaded.
+
+The only persisted client-side value is the selected visual theme.
+
+No real commercial data is included in the repository.
+
+---
+
+## Running locally
+
+Because the project is static, `index.html` can be opened directly in a browser.
+
+For the complete automated test environment:
+
+```bash
+npm install
+npm test
+```
+
+---
+
+## Docker
+
+The repository also includes an Nginx-based Docker configuration:
 
 ```bash
 docker compose up --build -d
 ```
 
-Open:
+The application is then exposed locally at:
 
 ```text
 http://localhost:8081
 ```
 
-Stop the environment with:
+To stop it:
 
 ```bash
 docker compose down
 ```
 
-Docker serves the same static application files without requiring a separate build process.
-
-> Docker execution has not yet been validated in the current test environment.
-
----
-
-## ▶️ Running Locally
-
-Because the application is static, you can also open:
-
-```text
-index.html
-```
-
-directly in a browser.
-
-For the complete test environment, use the Node.js or Docker instructions above.
+> [!NOTE]
+> The Docker configuration is included in the repository, but its execution is not currently claimed as validated in the documented test environment.
 
 ---
 
-## ⚠️ Limitations
+## Limits
 
-This project is a portfolio demonstration and not a production commercial pricing engine.
+This project demonstrates the pricing engine and interface architecture rather than a production commercial platform.
 
 It does not include:
 
@@ -310,6 +360,6 @@ There is currently no automated CI workflow configured.
 
 ---
 
-## 📄 License
+## License
 
-This project is licensed under the [MIT License](LICENSE).
+Licensed under the [MIT License](LICENSE).
