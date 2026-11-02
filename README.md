@@ -360,7 +360,7 @@ It does not include:
 - production analytics
 - commercial integrations
 
-There is currently no automated CI workflow configured.
+Automated tests run through GitHub Actions on pushes and pull requests to `main`, using Node.js 22 on Windows with Microsoft Edge for Playwright UI testing.
 
 ---
 
