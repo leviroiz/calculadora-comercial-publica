@@ -10,6 +10,10 @@ All products, prices and commercial rules in this repository are synthetic.
   <img src="https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
   <img src="https://img.shields.io/badge/Playwright-UI_tests-2EAD33?style=flat-square&logo=playwright&logoColor=white" alt="Playwright">
   <img src="https://img.shields.io/badge/Static-Browser_only-555555?style=flat-square" alt="Static browser application">
+
+<a href="https://github.com/leviroiz/calculadora-comercial-publica/actions/workflows/tests.yml">
+  <img src="https://github.com/leviroiz/calculadora-comercial-publica/actions/workflows/tests.yml/badge.svg" alt="Tests">
+</a>
 </p>
 
 ---
